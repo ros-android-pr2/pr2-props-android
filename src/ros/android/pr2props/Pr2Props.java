@@ -31,11 +31,8 @@ import android.view.Menu;
 import android.view.View;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import ros.android.util.Dashboard;
 import android.widget.LinearLayout;
 import org.ros.service.std_srvs.Empty;
-
-//TODO: search for all instances of TODO
 
 /**
  * @author damonkohler@google.com (Damon Kohler)
@@ -45,40 +42,14 @@ public class Pr2Props extends RosAppActivity {
   
   private String robotAppName;
   private String cameraTopic;
-  private Dashboard dashboard;
-
-  //Please only edit the functions above this line.
-  //You should not need to edit the ones below. If you find
-  //yourself doing so, that could be a feature request.
 
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    setDefaultAppName("pr2_props_app/pr2_props");
+    setDashboardResource(R.id.top_bar);
+    setMainWindowResource(R.layout.main);
     super.onCreate(savedInstanceState);
-    //Setup the window.
-    requestWindowFeature(Window.FEATURE_NO_TITLE);
-    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-        WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    setContentView(R.layout.main);
-
-    //Get the name of the application to start on the robot from the application system
-    //if it is null, instead start the default application.
-    robotAppName = getIntent().getStringExtra(AppManager.PACKAGE + ".robot_app_name");
-    if( robotAppName == null ) {
-      robotAppName = "pr2_props_app/pr2_props";
-    }
-    
-    //Find the dashboard, the top bar that allows the user to see the robot's battery
-    //and reset the robot's motors and breakers.
-    dashboard = new Dashboard(this);
-    dashboard.setView((LinearLayout)findViewById(R.id.top_bar),
-                      new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 
-                                                    LinearLayout.LayoutParams.WRAP_CONTENT));
-  
-    //TODO: add code
-    //Called on creation. ROS hasn't started yet, so don't start
-    //anything that depends on ROS. Instead, look up things like
-    //resources. Initialize your layout here.
   }
 
   private void runService(String service) {
@@ -131,44 +102,16 @@ public class Pr2Props extends RosAppActivity {
     runService("/pr2_props/hug");
   }
   
-
-
   @Override
   protected void onNodeCreate(Node node) {
     super.onNodeCreate(node);
-    try {
-      //Start up the application on the robot and start the dashboard.
-      startApp();
-      dashboard.start(node);
-      //TODO: Put your initialization code here
-    } catch (Exception ex) {
-      Log.e("Pr2Props", "Init error: " + ex.toString());
-      safeToastStatus("Failed: " + ex.getMessage());
-    }
   }
 
   @Override
   protected void onNodeDestroy(Node node) {
     super.onNodeDestroy(node);
-    dashboard.stop();
-    //TODO: Put your shutdown code here for things the reference the node
   }
   
-  
-  /** Starts the application on the robot. Calls the service with the name */
-  private void startApp() {
-    appManager.startApp(robotAppName,
-        new ServiceResponseListener<StartApp.Response>() {
-          @Override
-          public void onSuccess(StartApp.Response message) {
-          }
-          @Override
-          public void onFailure(RemoteException e) {
-            safeToastStatus("Failed: " + e.getMessage());
-          }
-        });
-  }
-
   /** Creates the menu for the options */
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -184,19 +127,8 @@ public class Pr2Props extends RosAppActivity {
     case R.id.kill: //Shutdown if the user clicks kill
       android.os.Process.killProcess(android.os.Process.myPid());
       return true;
-    //TODO: add cases for any additional menu items here.
     default:
       return super.onOptionsItemSelected(item);
     }
   }
-
-  /** Displays a status tip at the bottom of the screen from any thread. */
-  private void safeToastStatus(final String message) {
-    runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          Toast.makeText(Pr2Props.this, message, Toast.LENGTH_SHORT).show();
-        }
-      });
-  } 
 }
