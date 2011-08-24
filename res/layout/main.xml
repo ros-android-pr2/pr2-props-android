@@ -66,5 +66,17 @@
             android:layout_height="wrap_content" 
             android:text="Hug"
             android:onClick="hug" />
+    <TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
+              android:layout_weight="1"
+	      android:text="Spine"
+              android:textSize="30sp" /> 
+    <Button android:layout_width="fill_parent" 
+            android:layout_height="wrap_content" 
+            android:text="Raise"
+            android:onClick="raiseSpine" />
+    <Button android:layout_width="fill_parent" 
+            android:layout_height="wrap_content" 
+            android:text="Lower"
+            android:onClick="lowerSpine" />
   </LinearLayout>
 </LinearLayout>

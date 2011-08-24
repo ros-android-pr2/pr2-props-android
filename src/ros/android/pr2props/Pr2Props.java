@@ -24,6 +24,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.util.Log;
 import org.ros.node.service.ServiceClient;
+import org.ros.node.topic.Publisher;
 import org.ros.service.app_manager.StartApp;
 import org.ros.node.service.ServiceResponseListener;
 import android.widget.Toast;
@@ -33,6 +34,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 import org.ros.service.std_srvs.Empty;
+import org.ros.message.trajectory_msgs.JointTrajectory;
+import org.ros.message.trajectory_msgs.JointTrajectoryPoint;
+import java.util.ArrayList;
+import org.ros.message.Duration;
 
 /**
  * @author damonkohler@google.com (Damon Kohler)
@@ -42,6 +47,9 @@ public class Pr2Props extends RosAppActivity {
   
   private String robotAppName;
   private String cameraTopic;
+  private double spineHeight;
+  private Thread spineThread;
+  private Publisher spinePub;
 
   /** Called when the activity is first created. */
   @Override
@@ -49,9 +57,54 @@ public class Pr2Props extends RosAppActivity {
     setDefaultAppName("pr2_props_app/pr2_props");
     setDashboardResource(R.id.top_bar);
     setMainWindowResource(R.layout.main);
+    spineHeight = 0.0;
     super.onCreate(savedInstanceState);
   }
 
+  @Override
+  protected void onNodeCreate(Node node) {
+    super.onNodeCreate(node);
+    spinePub = node.newPublisher("torso_controller/command", "trajectory_msgs/JointTrajectory");
+    spineThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          JointTrajectory spineMessage = new JointTrajectory();
+          spineMessage.points = new ArrayList<JointTrajectoryPoint>();
+          spineMessage.joint_names = new ArrayList<String>();
+          spineMessage.joint_names.add("torso_lift_joint");
+          JointTrajectoryPoint p = new JointTrajectoryPoint();
+          p.positions = new double[] { 0.0 };
+          p.velocities = new double[] { 0.1 };
+          p.time_from_start = new Duration(0.25);
+          spineMessage.points.add(p);
+          try {
+            while (true) {
+              spineMessage.points.get(0).positions[0] = spineHeight;
+              spinePub.publish(spineMessage);
+              Thread.sleep(200L);
+            }
+          } catch (InterruptedException e) {
+          }
+        }
+      });
+    spineThread.start();
+  }
+  
+  @Override
+  protected void onNodeDestroy(Node node) {
+    super.onNodeDestroy(node);
+    final Thread thread = spineThread;
+    if (thread != null) {
+      spineThread.interrupt();
+    }
+    spineThread = null;
+    final Publisher pub = spinePub;
+    if (pub != null) {
+      pub.shutdown();
+    }
+    spinePub = null;
+  }
+  
   private void runService(String service) {
     Log.i("Pr2Props", "Run: " + service);
     try {
@@ -101,15 +154,11 @@ public class Pr2Props extends RosAppActivity {
   public void hug(View view) { 
     runService("/pr2_props/hug");
   }
-  
-  @Override
-  protected void onNodeCreate(Node node) {
-    super.onNodeCreate(node);
+  public void raiseSpine(View view) { 
+    spineHeight = 0.31;
   }
-
-  @Override
-  protected void onNodeDestroy(Node node) {
-    super.onNodeDestroy(node);
+  public void lowerSpine(View view) { 
+    spineHeight = 0.0;
   }
   
   /** Creates the menu for the options */
