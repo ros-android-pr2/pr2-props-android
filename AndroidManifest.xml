@@ -7,7 +7,7 @@
 	<application android:icon="@drawable/pr2props" android:label="@string/app_name">
 
 		<activity android:name=".Pr2Props" android:label="@string/app_name"
-			android:screenOrientation="landscape" android:configChanges="orientation|keyboardHidden">
+			android:screenOrientation="nosensor" android:configChanges="orientation|keyboardHidden">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
